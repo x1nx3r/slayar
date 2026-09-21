@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laya — System One decisions demo</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <div>
+    <h1>Laya <span>system-one demo</span></h1>
+    <p>State + typed questions, one forward pass. No text generation, nothing to parse.</p>
+  </div>
+  <a id="docs-link" href="#" target="_blank" rel="noreferrer">API docs</a>
+</header>
+
+<main>
+  <section class="card" id="settings">
+    <h2>Connection</h2>
+    <div class="row">
+      <label>API base <input id="base" type="url" placeholder="https://jev.x1nx3r.dev" /></label>
+      <label>API key <input id="key" type="password" placeholder="Bearer key (empty if open)" autocomplete="off" /></label>
+      <label>Checkpoint
+        <select id="model">
+          <option value="">auto-route (recommended)</option>
+          <option value="english">english</option>
+          <option value="multilingual">multilingual</option>
+          <option value="typed-decisions">typed-decisions</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Presets</h2>
+    <div class="row" id="presets"></div>
+  </section>
+
+  <section class="card">
+    <h2>State</h2>
+    <p class="hint">Plain text, or a JSON object (email, ticket, record). Valid JSON is sent as structure.</p>
+    <textarea id="state" rows="6"></textarea>
+  </section>
+
+  <section class="card">
+    <div class="q-head">
+      <h2>Questions</h2>
+      <div>
+        <button id="add-choice" type="button">+ choice</button>
+        <button id="add-score" type="button">+ score</button>
+        <button id="add-noul" type="button">+ noul</button>
+      </div>
+    </div>
+    <div id="questions"></div>
+    <div class="row run-row">
+      <button id="run" type="button" class="primary">Run all in one pass</button>
+      <span id="latency" class="muted"></span>
+      <span id="error" class="error"></span>
+    </div>
+  </section>
+
+  <section class="card hidden" id="routing-card">
+    <h2>Routing</h2>
+    <div id="routing"></div>
+  </section>
+
+  <section id="answers"></section>
+
+  <section class="card">
+    <details>
+      <summary>Raw request / response JSON</summary>
+      <div class="row">
+        <div><h3>Request</h3><pre id="raw-req">{}</pre></div>
+        <div><h3>Response</h3><pre id="raw-res">{}</pre></div>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

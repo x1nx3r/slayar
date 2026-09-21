@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 os.environ.setdefault("USE_TF", "0")
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from router import Router, MODEL_DIRS, route
@@ -186,6 +187,14 @@ app = FastAPI(
         "Interactive docs: /docs (Swagger UI), /redoc, /openapi.json."
     ),
     lifespan=lifespan,
+)
+
+# Browser demo calls the API cross-origin. Restrict in prod via ALLOWED_ORIGINS.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",")],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
