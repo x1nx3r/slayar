@@ -7,9 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     USE_TF=0 \
     MODEL_BASE=/models/laya \
     DEVICE=cpu \
-    MAX_LOADED=1 \
-    LAYA_API_KEY=""
-# ^^ set LAYA_API_KEY at runtime (compose / k8s secret). Empty = open dev mode.
+    MAX_LOADED=1
+# LAYA_API_KEY is intentionally NOT defaulted here (secret hygiene) — inject
+# at runtime via compose / k8s secret. Unset = open dev mode.
 
 WORKDIR /app
 

@@ -202,6 +202,8 @@ def _predict(req: PredictRequest) -> dict:
         return router_obj.predict(req.state, questions, model=name)
     except ValueError as e:  # e.g. options don't fit head_max_len
         raise HTTPException(422, str(e))
+    except RuntimeError as e:  # e.g. weights not mounted
+        raise HTTPException(503, str(e))
     except Exception as e:
         raise HTTPException(500, f"{type(e).__name__}: {e}")
 

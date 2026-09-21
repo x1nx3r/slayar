@@ -16,13 +16,23 @@ MODEL_BASE = os.getenv("MODEL_BASE", os.path.join(BASE, "laya"))
 for _p in (MODEL_BASE, os.path.join(BASE, "laya")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
-from rl_agent_api import RLAgent  # noqa: E402
-
 MODEL_DIRS = {
     "english": MODEL_BASE,
     "multilingual": os.path.join(MODEL_BASE, "multilingual"),
     "typed-decisions": os.path.join(MODEL_BASE, "typed-decisions"),
 }
+
+# Imported lazily so the API boots (and /health answers) even with no
+# weights mounted; first /predict then fails with a clear 503.
+RLAgent = None
+
+
+def _rl_agent_class():
+    global RLAgent
+    if RLAgent is None:
+        from rl_agent_api import RLAgent as _C
+        RLAgent = _C
+    return RLAgent
 
 
 def serialize_state(state: Any) -> str:
@@ -69,11 +79,14 @@ class Router:
         self.max_loaded = max(1, max_loaded)
         self._agents: "OrderedDict[str, RLAgent]" = OrderedDict()
 
-    def _get(self, name: str) -> RLAgent:
+    def _get(self, name: str) -> "RLAgent":
         if name in self._agents:
             self._agents.move_to_end(name)
             return self._agents[name]
-        agent = RLAgent(MODEL_DIRS[name], device=self.device)
+        weights = os.path.join(MODEL_DIRS[name], "model.safetensors")
+        if not os.path.exists(weights):
+            raise RuntimeError(f"weights not found: {weights} (mount the model PV at MODEL_BASE={MODEL_BASE})")
+        agent = _rl_agent_class()(MODEL_DIRS[name], device=self.device)
         self._agents[name] = agent
         while len(self._agents) > self.max_loaded:
             _, old = self._agents.popitem(last=False)
