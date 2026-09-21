@@ -1,17 +1,28 @@
-# api serves from the `laya-models` volume; fetch-model fills it once via
-# `docker compose up` (skips if weights already present).
+# Coolify-friendly layout: `api` is the only always-on service. Seeding the
+# weights is a manual one-time step (the volume persists afterwards):
+#
+#   export HF_TOKEN=hf_...   # optional, faster downloads
+#   docker compose --profile fetch up fetch-model
+#
+# The old `depends_on: completed_successfully` gate never fires under
+# Coolify's restart policy, so it is intentionally not used here.
 services:
   fetch-model:
+    profiles: [fetch]  # excluded from normal `up` / Coolify deploys
     image: python:3.12-slim
+    restart: "no"
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
     volumes:
       - laya-models:/models/laya
     command: >
-      bash -c "test -f /models/laya/model.safetensors ||
-        (pip install -q huggingface_hub &&
+      bash -c "test -f /models/laya/model.safetensors && echo seeded ||
+        (pip install -q --root-user-action=ignore huggingface_hub &&
          python -c \"from huggingface_hub import snapshot_download; snapshot_download('convaiinnovations/laya', local_dir='/models/laya')\")"
 
   api:
     build: .
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -22,9 +33,12 @@ services:
       # PRELOAD: all  # needs ~4.5G RAM; default lazy keeps 1 hot
     volumes:
       - laya-models:/models/laya:ro
-    depends_on:
-      fetch-model:
-        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
 
 volumes:
   laya-models:
