@@ -19,6 +19,8 @@ spec:
             - {name: MODEL_BASE, value: /models/laya}
             - {name: DEVICE, value: cpu}
             - {name: MAX_LOADED, value: "1"}
+            - name: LAYA_API_KEY
+              valueFrom: {secretKeyRef: {name: laya-router-api-key, key: apiKey}}
           resources:
             requests: {memory: 3Gi, cpu: "2"}
             limits: {memory: 6Gi}

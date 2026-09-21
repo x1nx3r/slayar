@@ -11,9 +11,21 @@ from contextlib import asynccontextmanager
 
 os.environ.setdefault("USE_TF", "0")
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from router import Router, MODEL_DIRS, route
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+def require_key(cred: Optional[HTTPAuthorizationCredentials] = Depends(_bearer)):
+    """Bearer auth, active only when LAYA_API_KEY is set. Empty = open dev mode."""
+    expected = os.getenv("LAYA_API_KEY", "")
+    if not expected:
+        return
+    if cred is None or cred.scheme.lower() != "bearer" or cred.credentials != expected:
+        raise HTTPException(401, "Missing or invalid API key. Send Authorization: Bearer <LAYA_API_KEY>.")
 
 # ---------------------------------------------------------------- request
 # Jev: instructions / criteria entries may be string, object, array (or null).
@@ -158,6 +170,8 @@ async def lifespan(app: FastAPI):
         router_obj.preload()
     elif preload:
         router_obj.preload([m.strip() for m in preload.split(",") if m.strip() in MODEL_DIRS])
+    if not os.getenv("LAYA_API_KEY"):
+        print("WARNING: LAYA_API_KEY unset — API is open (set it to require Bearer auth)")
     yield
     router_obj.unload()
 
@@ -197,12 +211,12 @@ def health():
     return {"ok": True, "loaded": list(router_obj._agents.keys()) if router_obj else []}
 
 
-@app.get("/models", tags=["ops"])
+@app.get("/models", tags=["ops"], dependencies=[Depends(require_key)])
 def models():
     return {"models": sorted(MODEL_DIRS.keys()), "aliases": MODEL_ALIASES, "loaded": list(router_obj._agents.keys())}
 
 
-@app.get("/v1/models", tags=["jev-compat"])
+@app.get("/v1/models", tags=["jev-compat"], dependencies=[Depends(require_key)])
 def jev_models():
     """Jev-compatible model listing (GET /v1/models)."""
     return {
@@ -215,19 +229,19 @@ def jev_models():
     }
 
 
-@app.post("/predict", response_model=PredictResponse, tags=["predict"])
+@app.post("/predict", response_model=PredictResponse, tags=["predict"], dependencies=[Depends(require_key)])
 def predict(req: PredictRequest):
     """Native endpoint. Omit `model` to auto-route by script."""
     return _predict(req)
 
 
-@app.post("/v1/systemone", response_model=PredictResponse, tags=["jev-compat"])
+@app.post("/v1/systemone", response_model=PredictResponse, tags=["jev-compat"], dependencies=[Depends(require_key)])
 def systemone(req: PredictRequest):
     """Jev-compatible endpoint. Accepts {state, model, questions}; jev-* model names alias to english."""
     return _predict(req)
 
 
-@app.post("/route", tags=["predict"])
+@app.post("/route", tags=["predict"], dependencies=[Depends(require_key)])
 def dry_route(req: PredictRequest):
     """Inspect the routing decision without running any forward pass."""
     name, reason = route(req.state, resolve_model(req.model))

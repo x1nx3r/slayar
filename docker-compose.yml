@@ -18,6 +18,7 @@ services:
       MODEL_BASE: /models/laya
       DEVICE: cpu
       MAX_LOADED: 1
+      LAYA_API_KEY: ${LAYA_API_KEY:-}  # export LAYA_API_KEY=... to require Bearer auth
       # PRELOAD: all  # needs ~4.5G RAM; default lazy keeps 1 hot
     volumes:
       - laya-models:/models/laya:ro
