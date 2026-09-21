@@ -4,5 +4,5 @@ __pycache__
 .git
 .gitignore
 Dockerfile
-docker-compose.yml
+docker-compose.yaml
 k8s/
