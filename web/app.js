@@ -3,7 +3,10 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
-const DEFAULT_BASE = "https://jev.x1nx3r.dev";
+const FALLBACK_BASE = "https://jev.x1nx3r.dev";
+// Served from the API itself -> same origin (no CORS involved).
+// Opened as a file or from another host -> fall back to the public API.
+const DEFAULT_BASE = window.location.protocol.startsWith("http") ? window.location.origin : FALLBACK_BASE;
 const store = {
   get base() { return localStorage.getItem("laya.base") || DEFAULT_BASE; },
   set base(v) { localStorage.setItem("laya.base", v); },

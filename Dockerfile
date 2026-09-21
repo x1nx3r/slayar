@@ -17,6 +17,7 @@ COPY requirements-cpu.txt .
 RUN pip install --no-cache-dir -r requirements-cpu.txt
 
 COPY server.py router.py ./
+COPY web/ ./web/
 
 EXPOSE 8000
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]

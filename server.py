@@ -14,6 +14,7 @@ os.environ.setdefault("USE_TF", "0")
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from router import Router, MODEL_DIRS, route
 
@@ -257,3 +258,9 @@ def dry_route(req: PredictRequest):
     """Inspect the routing decision without running any forward pass."""
     name, reason = route(req.state, resolve_model(req.model))
     return {"model": name, "reason": reason}
+
+
+# Demo UI (web/) served at / — API routes above take precedence, this is the fallback.
+_WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+if os.path.isdir(_WEB):
+    app.mount("/", StaticFiles(directory=_WEB, html=True), name="web")
