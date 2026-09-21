@@ -1,5 +1,5 @@
 # CPU-only image. Model weights are NOT baked in — mount them at /models/laya
-# from a named volume / PVC (see docker-compose.yml, k8s/).
+# from a named volume / PVC (see docker-compose.yaml, k8s/).
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
