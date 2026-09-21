@@ -1,0 +1,8 @@
+laya/
+__pycache__
+*.pyc
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+k8s/

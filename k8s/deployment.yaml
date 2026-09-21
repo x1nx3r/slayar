@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laya-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: laya-router}
+  template:
+    metadata:
+      labels: {app: laya-router}
+    spec:
+      containers:
+        - name: api
+          image: laya-router:cpu   # docker build -t laya-router:cpu .
+          ports:
+            - {containerPort: 8000}
+          env:
+            - {name: MODEL_BASE, value: /models/laya}
+            - {name: DEVICE, value: cpu}
+            - {name: MAX_LOADED, value: "1"}
+          resources:
+            requests: {memory: 3Gi, cpu: "2"}
+            limits: {memory: 6Gi}
+          volumeMounts:
+            - {name: models, mountPath: /models/laya, readOnly: true}
+      volumes:
+        - name: models
+          persistentVolumeClaim: {claimName: laya-models}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: laya-router
+spec:
+  selector: {app: laya-router}
+  ports:
+    - {port: 8000, targetPort: 8000}

@@ -1,0 +1,29 @@
+# api serves from the `laya-models` volume; fetch-model fills it once via
+# `docker compose up` (skips if weights already present).
+services:
+  fetch-model:
+    image: python:3.12-slim
+    volumes:
+      - laya-models:/models/laya
+    command: >
+      bash -c "test -f /models/laya/model.safetensors ||
+        (pip install -q huggingface_hub &&
+         python -c \"from huggingface_hub import snapshot_download; snapshot_download('convaiinnovations/laya', local_dir='/models/laya')\")"
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_BASE: /models/laya
+      DEVICE: cpu
+      MAX_LOADED: 1
+      # PRELOAD: all  # needs ~4.5G RAM; default lazy keeps 1 hot
+    volumes:
+      - laya-models:/models/laya:ro
+    depends_on:
+      fetch-model:
+        condition: service_completed_successfully
+
+volumes:
+  laya-models:

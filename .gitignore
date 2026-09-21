@@ -1,0 +1,19 @@
+# Model weights (pulled with `hf download convaiinnovations/laya`, 2.3G)
+laya/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Env / secrets
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,18 @@
+# One-shot: pulls convaiinnovations/laya (public) into the PVC. Delete after completion.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: laya-fetch-model
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: fetch
+          image: python:3.12-slim
+          command: ["bash", "-c", "pip install -q huggingface_hub && python -c \"from huggingface_hub import snapshot_download; snapshot_download('convaiinnovations/laya', local_dir='/models/laya')\""]
+          volumeMounts:
+            - {name: models, mountPath: /models}
+      volumes:
+        - name: models
+          persistentVolumeClaim: {claimName: laya-models}
