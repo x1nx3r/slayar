@@ -23,8 +23,8 @@ services:
   api:
     build: .
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"  # no host port bind: Coolify itself occupies 0.0.0.0:8000; its proxy routes here
     environment:
       MODEL_BASE: /models/laya
       DEVICE: cpu
